@@ -106,6 +106,18 @@ async def get_fileInfo(graph: Graph, path=None):
     for k, v in items.items():
         print(k, " : ", v)
 
+
+def verifyFileSize(fileName, size):
+    try:
+        with open(destDir + fileName, 'rb') as f:
+            f.seek(0, os.SEEK_END)
+            if f.tell() == size:
+                return True
+            else:
+                return False
+    except FileNotFoundError:
+        print(f"Target File does not exist! {fileName}")
+
 async def download_directory(graph: Graph):
     path = input_path('type the target directory path: ')
     encoded_path = parse.quote(path)
@@ -118,14 +130,17 @@ async def download_directory(graph: Graph):
         print("No Files in", path)
     for entries in range(len(filtered)):
         item = filtered[entries]
-        await download(item['@microsoft.graph.downloadUrl'], item['name'])
-        with open(destDir + item['name'], 'rb') as f:
-            f.seek(0, os.SEEK_END)
-            if f.tell == item['size']:
-                logging.info(f"{item['name']} saved! try to delete...")
-            else:
-                logging.info(f"{item['name']} not completed!")
-                return
+        await download(graph, item['@microsoft.graph.downloadUrl'], item['name'])
+        if verifyFileSize(item['name'], item['size']):
+            msg = f"{item['name']} saved! try to delete..."
+            print(msg)
+            logging.info(msg)
+        else:
+            msg = f"{item['name']} download not completed! "
+            print(msg)
+            logging.info(msg)
+            return
+
 
 async def download_file(graph:Graph, path = None):
     if not path:
@@ -138,14 +153,19 @@ async def download_file(graph:Graph, path = None):
     if len(filtered)==0:
         print("No Files in", path)
         return
-    await download(graph, items['@microsoft.graph.downloadUrl'], items['name'])
-    with open(destDir + items['name'], 'rb') as f:
-        f.seek(0, os.SEEK_END)
-        if f.tell == items['size']:
-            logging.info(f"{items['name']} saved! try to delete...")
-        else:
-            logging.info(f"{items['name']} not completed!")
-            return
+    elif len(filtered)>1:
+        print("something wrong!")
+        return
+    await download(graph, filtered['@microsoft.graph.downloadUrl'], filtered['name'])
+    if verifyFileSize(filtered['name'], filtered['size']):
+        msg = f"{filtered['name']} saved! try to delete..."
+        print(msg)
+        logging.info(msg)
+    else:
+        msg = f"{filtered['name']} download not completed! "
+        print(msg)
+        logging.info(msg)
+        return
 
     delete_file(graph, items['id'])
 
@@ -167,7 +187,7 @@ async def download(graph: Graph, download_url, filename):
 
 async def delete_file(graph: Graph, id, file_path = None):
 
-    await graph.user_client.me.drive.items.by_drive_item_id('driveItem-id').delete()
+    await graph.user_client.me.drive.items.by_drive_item_id(id).delete()
 
 #graphClient = GetAuthenticatedGraphClient(...)
 # get user's files and folders in the root

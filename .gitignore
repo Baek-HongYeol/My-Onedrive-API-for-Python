@@ -1,4 +1,5 @@
 my_token_cache.bin
 config.dev.cfg
-
+*.mp4
+*.ts
 __pycache__
