@@ -34,6 +34,13 @@ destDir = ./
 ```
 
 
+### Known Issues
+- **Token caching does not work.**   
+    It's caused by OAuth2 spec, which allows the server to selectively issue an token for partial scope of client requested.   
+
+    File download/deletion and listing require User.Read and Files.ReadWrite   
+
+    GitHub Discussion for AzureAD - https://github.com/AzureAD/microsoft-authentication-library-for-python/discussions/459
 
 
 ### 참조 문서   
